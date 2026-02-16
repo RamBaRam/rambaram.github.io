@@ -102,7 +102,7 @@ const TelegramApp = (() => {
    * Поделиться привычкой через Telegram
    */
   function shareHabit(habitId, habitName, habitIcon) {
-    const botUsername = 'rambaram_habit_bot'; // ← имя бота
+    const botUsername = 'betaHabitsBot'; // ← имя бота
     const appName = 'app'; // ← короткое имя Mini App в BotFather
     const url = `https://t.me/${botUsername}/${appName}?startapp=habit_${habitId}`;
     const text = `${habitIcon} Присоединяйся к привычке «${habitName}»!`;
