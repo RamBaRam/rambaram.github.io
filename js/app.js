@@ -107,7 +107,6 @@ const HabitApp = (() => {
 
     let sharedBadge = '';
     let friendsSection = '';
-    let shareBtn = '';
 
     if (isShared) {
       sharedBadge = `<span class="shared-badge">👥 ${habit.friendName || habit.ownerName || habit.owner_name}</span>`;
@@ -121,19 +120,43 @@ const HabitApp = (() => {
             <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — выполнили сегодня</span>
           </div>`;
       }
-    } else if (habit.is_public) {
-      // Кнопка «Пригласить» для своих публичных привычек
-      shareBtn = `
-        <div class="habit-share-row">
-          <button class="share-btn" onclick="event.stopPropagation(); HabitApp.shareHabit(${habit.id}, '${habit.name.replace(/'/g, '\\&#39;')}', '${habit.icon}')">
-            📤 Пригласить друга
+    }
+
+    // Раскрываемая панель: описание + действия
+    const description = habit.description ? `<p class="habit-description">${habit.description}</p>` : '';
+
+    let actions = '';
+    if (!isShared) {
+      const shareAction = habit.is_public
+        ? `<button class="action-btn share-btn" onclick="event.stopPropagation(); HabitApp.shareHabit(${habit.id}, '${habit.name.replace(/'/g, '\\&#39;')}', '${habit.icon}')">
+            📤 Пригласить
+          </button>`
+        : '';
+      actions = `
+        <div class="habit-actions">
+          ${shareAction}
+          <button class="action-btn delete-btn" onclick="event.stopPropagation(); HabitApp.confirmDeleteHabit(${habit.id}, '${habit.name.replace(/'/g, '\\&#39;')}')">
+            🗑 Удалить
           </button>
-          ${habit.subscriber_count > 0 ? `<span class="subscriber-count">👥 ${habit.subscriber_count}</span>` : ''}
+        </div>`;
+    } else {
+      actions = `
+        <div class="habit-actions">
+          <button class="action-btn delete-btn" onclick="event.stopPropagation(); HabitApp.confirmUnsubscribe(${habit.id}, '${habit.name.replace(/'/g, '\\&#39;')}')">
+            ❌ Отписаться
+          </button>
         </div>`;
     }
 
+    const expandContent = (description || actions) ? `
+      <div class="habit-expand">
+        ${description}
+        ${habit.is_public && !isShared && habit.subscriber_count > 0 ? `<span class="subscriber-count">👥 ${habit.subscriber_count} ${pluralSubscribers(habit.subscriber_count)}</span>` : ''}
+        ${actions}
+      </div>` : '';
+
     return `
-      <div class="habit-card" id="card-${habit.id}">
+      <div class="habit-card" id="card-${habit.id}" onclick="HabitApp.toggleExpand(${habit.id})">
         <div class="habit-card-header">
           <div class="habit-icon">${habit.icon}</div>
           <div class="habit-info">
@@ -150,7 +173,7 @@ const HabitApp = (() => {
           </button>
         </div>
         ${friendsSection}
-        ${shareBtn}
+        ${expandContent}
       </div>`;
   }
 
@@ -410,12 +433,94 @@ const HabitApp = (() => {
     setTimeout(() => location.reload(), 300);
   }
 
+  // ── Expand / Delete / Unsubscribe ──
+
+  function toggleExpand(habitId) {
+    const card = document.getElementById(`card-${habitId}`);
+    if (!card) return;
+    const wasExpanded = card.classList.contains('expanded');
+    // Collapse all other cards
+    document.querySelectorAll('.habit-card.expanded').forEach(c => c.classList.remove('expanded'));
+    if (!wasExpanded) {
+      card.classList.add('expanded');
+      TelegramApp.hapticFeedback('selection');
+    }
+  }
+
+  function confirmDeleteHabit(habitId, habitName) {
+    if (TelegramApp.tg?.showPopup) {
+      TelegramApp.tg.showPopup({
+        title: 'Удалить привычку?',
+        message: `«${habitName}» будет удалена вместе со всей историей.`,
+        buttons: [
+          { id: 'delete', type: 'destructive', text: 'Удалить' },
+          { id: 'cancel', type: 'cancel' }
+        ]
+      }, async (btnId) => {
+        if (btnId === 'delete') {
+          await doDeleteHabit(habitId);
+        }
+      });
+    } else {
+      if (confirm(`Удалить «${habitName}»? Это действие нельзя отменить.`)) {
+        doDeleteHabit(habitId);
+      }
+    }
+  }
+
+  async function doDeleteHabit(habitId) {
+    try {
+      await HabitsManager.deleteHabit(habitId);
+      TelegramApp.hapticFeedback('success');
+      showToast('🗑 Привычка удалена');
+      renderHabitsView();
+    } catch (e) {
+      TelegramApp.hapticFeedback('error');
+      showToast('⚠️ Не удалось удалить');
+    }
+  }
+
+  function confirmUnsubscribe(habitId, habitName) {
+    if (TelegramApp.tg?.showPopup) {
+      TelegramApp.tg.showPopup({
+        title: 'Отписаться?',
+        message: `Вы перестанете отслеживать «${habitName}».`,
+        buttons: [
+          { id: 'unsub', type: 'destructive', text: 'Отписаться' },
+          { id: 'cancel', type: 'cancel' }
+        ]
+      }, async (btnId) => {
+        if (btnId === 'unsub') {
+          await doUnsubscribe(habitId);
+        }
+      });
+    } else {
+      if (confirm(`Отписаться от «${habitName}»?`)) {
+        doUnsubscribe(habitId);
+      }
+    }
+  }
+
+  async function doUnsubscribe(habitId) {
+    try {
+      await HabitsManager.unsubscribeFromHabit(habitId);
+      TelegramApp.hapticFeedback('success');
+      showToast('❌ Вы отписались');
+      await HabitsManager.syncFromServer();
+      renderHabitsView();
+    } catch (e) {
+      TelegramApp.hapticFeedback('error');
+      showToast('⚠️ Не удалось отписаться');
+    }
+  }
+
   return {
     init, switchView, toggleHabit,
     showFriendHabits, toggleSubscription,
     openModal, closeModal, selectIcon, selectFrequency,
     togglePublic, createHabit,
-    shareHabit, acceptInvite, closeInviteModal, showToast
+    shareHabit, acceptInvite, closeInviteModal, showToast,
+    toggleExpand, confirmDeleteHabit, confirmUnsubscribe
   };
 })();
 

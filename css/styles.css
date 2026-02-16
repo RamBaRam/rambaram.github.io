@@ -1067,13 +1067,64 @@ textarea.form-input {
 }
 
 /* ── Share / Invite ── */
-.habit-share-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+.habit-expand {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease, margin-top 0.3s ease;
+  margin-top: 0;
+}
+
+.habit-card.expanded .habit-expand {
+  max-height: 200px;
+  opacity: 1;
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
   border-top: 1px solid var(--border);
+}
+
+.habit-description {
+  font-size: var(--font-size-sm);
+  color: var(--tg-theme-hint-color);
+  line-height: 1.4;
+  margin-bottom: var(--space-sm);
+}
+
+.habit-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn.share-btn {
+  border: 1px solid var(--accent);
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--accent-light);
+}
+
+.action-btn.delete-btn {
+  border: 1px solid var(--danger);
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--danger);
+  margin-left: auto;
 }
 
 .share-btn {
