@@ -8,19 +8,19 @@ const TelegramApp = (() => {
 
   function init() {
     tg = window.Telegram?.WebApp;
-    
+
     if (tg) {
       tg.ready();
       tg.expand();
       applyTheme();
       user = tg.initDataUnsafe?.user || null;
-      
+
       tg.BackButton.onClick(() => {
         if (document.querySelector('.modal-overlay.visible')) {
           HabitApp.closeModal();
         }
       });
-      
+
       tg.onEvent('themeChanged', applyTheme);
     } else {
       // Demo mode for browser testing
@@ -31,7 +31,7 @@ const TelegramApp = (() => {
         username: 'demo_user'
       };
     }
-    
+
     return user;
   }
 
@@ -39,7 +39,7 @@ const TelegramApp = (() => {
     if (!tg) return;
     const root = document.documentElement;
     const tp = tg.themeParams;
-    
+
     if (tp.bg_color) root.style.setProperty('--tg-theme-bg-color', tp.bg_color);
     if (tp.secondary_bg_color) root.style.setProperty('--tg-theme-secondary-bg-color', tp.secondary_bg_color);
     if (tp.text_color) root.style.setProperty('--tg-theme-text-color', tp.text_color);
@@ -60,6 +60,13 @@ const TelegramApp = (() => {
   function getUserInitials() {
     if (!user) return '?';
     return ((user.first_name?.[0] || '') + (user.last_name?.[0] || '')).toUpperCase() || '?';
+  }
+
+  /**
+   * Возвращает initData для отправки на сервер
+   */
+  function getInitData() {
+    return tg?.initData || '';
   }
 
   function hapticFeedback(type = 'impact') {
@@ -86,7 +93,7 @@ const TelegramApp = (() => {
 
   return {
     init, getUser, getUserId, getUserName, getUserInitials,
-    hapticFeedback, showMainButton, hideMainButton,
+    getInitData, hapticFeedback, showMainButton, hideMainButton,
     get tg() { return tg; }
   };
 })();

@@ -30,9 +30,10 @@ const CalendarComponent = (() => {
         selectorHTML += `<button class="habit-selector-chip ${!selectedHabitId ? 'active' : ''}" 
       onclick="CalendarComponent.selectHabit(null)">📊 Все</button>`;
         allHabits.forEach(h => {
-            const isActive = selectedHabitId === h.id ? 'active' : '';
+            // eslint-disable-next-line eqeqeq
+            const isActive = selectedHabitId == h.id ? 'active' : '';
             selectorHTML += `<button class="habit-selector-chip ${isActive}" 
-        onclick="CalendarComponent.selectHabit('${h.id}')">${h.icon} ${h.name}</button>`;
+        onclick="CalendarComponent.selectHabit(${h.id})">${h.icon} ${h.name}</button>`;
         });
         selectorHTML += '</div>';
 
@@ -82,7 +83,8 @@ const CalendarComponent = (() => {
             let friendDots = [];
 
             const habitsToCheck = selectedHabitId
-                ? allHabits.filter(h => h.id === selectedHabitId) : allHabits;
+                // eslint-disable-next-line eqeqeq
+                ? allHabits.filter(h => h.id == selectedHabitId) : allHabits;
 
             habitsToCheck.forEach(habit => {
                 totalCount++;
@@ -126,7 +128,8 @@ const CalendarComponent = (() => {
         const userId = TelegramApp.getUserId();
 
         const habitsToShow = selectedHabitId
-            ? allHabits.filter(h => h.id === selectedHabitId) : allHabits;
+            // eslint-disable-next-line eqeqeq
+            ? allHabits.filter(h => h.id == selectedHabitId) : allHabits;
 
         if (habitsToShow.length === 0) {
             return `<div class="day-detail">
@@ -137,8 +140,8 @@ const CalendarComponent = (() => {
 
         let items = '';
         habitsToShow.forEach(habit => {
-            const completions = habit.completions[selectedDate] || [];
-            const myCompleted = completions.includes(userId);
+            // Используем API-совместимый метод для проверки выполнения
+            const myCompleted = HabitsManager.isCompletedOnDate(habit.id, date);
             const icon = myCompleted ? '✅' : '⬜';
             const cls = myCompleted ? 'day-detail-check' : 'day-detail-miss';
 

@@ -1,130 +1,131 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Трекер привычек с друзьями — Telegram Mini App">
   <title>Трекер Привычек</title>
-  
+
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
+
   <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
 
-<div id="app">
-  <!-- Header -->
-  <header class="app-header">
-    <h1>🎯 Трекер Привычек</h1>
-    <p class="subtitle" id="user-greeting">Загрузка...</p>
-  </header>
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <h1><span class="header-emoji">🎯</span> Трекер Привычек</h1>
+      <p class="subtitle" id="user-greeting">Загрузка...</p>
+    </header>
 
-  <!-- Tab Navigation -->
-  <nav class="tab-nav">
-    <button class="tab-btn active" data-view="habits" onclick="HabitApp.switchView('habits')">
-      <span class="tab-icon">📋</span> Привычки
-    </button>
-    <button class="tab-btn" data-view="calendar" onclick="HabitApp.switchView('calendar')">
-      <span class="tab-icon">📅</span> Календарь
-    </button>
-    <button class="tab-btn" data-view="friends" onclick="HabitApp.switchView('friends')">
-      <span class="tab-icon">👥</span> Друзья
-    </button>
-  </nav>
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-view="habits" onclick="HabitApp.switchView('habits')">
+        <span class="tab-icon">📋</span> Привычки
+      </button>
+      <button class="tab-btn" data-view="calendar" onclick="HabitApp.switchView('calendar')">
+        <span class="tab-icon">📅</span> Календарь
+      </button>
+      <button class="tab-btn" data-view="friends" onclick="HabitApp.switchView('friends')">
+        <span class="tab-icon">👥</span> Друзья
+      </button>
+    </nav>
 
-  <!-- Views -->
-  <main class="views-container">
-    <!-- Habits View -->
-    <section id="habits-view" class="view active"></section>
+    <!-- Views -->
+    <main class="views-container">
+      <!-- Habits View -->
+      <section id="habits-view" class="view active"></section>
 
-    <!-- Calendar View -->
-    <section id="calendar-view" class="view"></section>
+      <!-- Calendar View -->
+      <section id="calendar-view" class="view"></section>
 
-    <!-- Friends View -->
-    <section id="friends-view" class="view"></section>
-  </main>
-</div>
-
-<!-- FAB - Create Habit -->
-<button class="fab" onclick="HabitApp.openModal()" aria-label="Создать привычку">＋</button>
-
-<!-- Create Habit Modal -->
-<div class="modal-overlay" id="create-modal" onclick="if(event.target===this) HabitApp.closeModal()">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h2 class="modal-title">Новая привычка</h2>
-
-    <!-- Name -->
-    <div class="form-group">
-      <label class="form-label">Название</label>
-      <input type="text" class="form-input" id="habit-name-input" 
-        placeholder="Например: Утренняя пробежка" maxlength="50">
-    </div>
-
-    <!-- Description -->
-    <div class="form-group">
-      <label class="form-label">Описание (необязательно)</label>
-      <textarea class="form-input" id="habit-desc-input" 
-        placeholder="Краткое описание привычки..." maxlength="200"></textarea>
-    </div>
-
-    <!-- Icon -->
-    <div class="form-group">
-      <label class="form-label">Иконка</label>
-      <div class="icon-picker">
-        <button class="icon-option selected" onclick="HabitApp.selectIcon(this)">🏃</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">📚</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">💧</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">🧘</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">✍️</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">🎸</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">💪</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">🥗</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">😴</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">🧹</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">💻</button>
-        <button class="icon-option" onclick="HabitApp.selectIcon(this)">🎨</button>
-      </div>
-    </div>
-
-    <!-- Frequency -->
-    <div class="form-group">
-      <label class="form-label">Частота</label>
-      <div class="frequency-selector">
-        <button class="frequency-btn selected" data-freq="daily" 
-          onclick="HabitApp.selectFrequency(this)">Ежедневно</button>
-        <button class="frequency-btn" data-freq="weekly" 
-          onclick="HabitApp.selectFrequency(this)">Еженедельно</button>
-      </div>
-    </div>
-
-    <!-- Public toggle -->
-    <div class="form-group">
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Публичная привычка</div>
-          <div class="toggle-hint">Друзья смогут подписаться</div>
-        </div>
-        <button class="toggle-switch on" id="public-toggle" 
-          onclick="HabitApp.togglePublic()"></button>
-      </div>
-    </div>
-
-    <!-- Submit -->
-    <button class="btn-primary" onclick="HabitApp.createHabit()">Создать привычку</button>
+      <!-- Friends View -->
+      <section id="friends-view" class="view"></section>
+    </main>
   </div>
-</div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+  <!-- FAB - Create Habit -->
+  <button class="fab" onclick="HabitApp.openModal()" aria-label="Создать привычку">＋</button>
 
-<!-- Scripts (order matters) -->
-<script src="js/telegram.js"></script>
-<script src="js/habits.js"></script>
-<script src="js/calendar.js"></script>
-<script src="js/app.js"></script>
+  <!-- Create Habit Modal -->
+  <div class="modal-overlay" id="create-modal" onclick="if(event.target===this) HabitApp.closeModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h2 class="modal-title">Новая привычка</h2>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label class="form-label">Название</label>
+        <input type="text" class="form-input" id="habit-name-input" placeholder="Например: Утренняя пробежка"
+          maxlength="50">
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Описание (необязательно)</label>
+        <textarea class="form-input" id="habit-desc-input" placeholder="Краткое описание привычки..."
+          maxlength="200"></textarea>
+      </div>
+
+      <!-- Icon -->
+      <div class="form-group">
+        <label class="form-label">Иконка</label>
+        <div class="icon-picker">
+          <button class="icon-option selected" onclick="HabitApp.selectIcon(this)">🏃</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">📚</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">💧</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">🧘</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">✍️</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">🎸</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">💪</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">🥗</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">😴</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">🧹</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">💻</button>
+          <button class="icon-option" onclick="HabitApp.selectIcon(this)">🎨</button>
+        </div>
+      </div>
+
+      <!-- Frequency -->
+      <div class="form-group">
+        <label class="form-label">Частота</label>
+        <div class="frequency-selector">
+          <button class="frequency-btn selected" data-freq="daily"
+            onclick="HabitApp.selectFrequency(this)">Ежедневно</button>
+          <button class="frequency-btn" data-freq="weekly" onclick="HabitApp.selectFrequency(this)">Еженедельно</button>
+        </div>
+      </div>
+
+      <!-- Public toggle -->
+      <div class="form-group">
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Публичная привычка</div>
+            <div class="toggle-hint">Друзья смогут подписаться</div>
+          </div>
+          <button class="toggle-switch on" id="public-toggle" onclick="HabitApp.togglePublic()"></button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button class="btn-primary" onclick="HabitApp.createHabit()">Создать привычку</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/telegram.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/app.js"></script>
 
 </body>
+
 </html>

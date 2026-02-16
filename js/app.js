@@ -3,58 +3,58 @@
    ═══════════════════════════════════════════════════════════ */
 
 const HabitApp = (() => {
-    let currentView = 'habits';
+  let currentView = 'habits';
 
-    function init() {
-        TelegramApp.init();
-        HabitsManager.init();
-        CalendarComponent.init();
+  async function init() {
+    TelegramApp.init();
+    await HabitsManager.init();
+    CalendarComponent.init();
 
-        const greeting = document.getElementById('user-greeting');
-        if (greeting) greeting.textContent = getGreeting();
+    const greeting = document.getElementById('user-greeting');
+    if (greeting) greeting.textContent = getGreeting();
 
-        switchView('habits');
+    switchView('habits');
+  }
+
+  function getGreeting() {
+    const hour = new Date().getHours();
+    let period = 'Добрый день';
+    if (hour < 6) period = 'Доброй ночи';
+    else if (hour < 12) period = 'Доброе утро';
+    else if (hour >= 18) period = 'Добрый вечер';
+    return `${period}, ${TelegramApp.getUserName()}!`;
+  }
+
+  // ── Navigation ──
+
+  function switchView(viewName) {
+    currentView = viewName;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === viewName);
+    });
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.id === viewName + '-view');
+    });
+
+    switch (viewName) {
+      case 'habits': renderHabitsView(); break;
+      case 'calendar': CalendarComponent.render('calendar-view'); break;
+      case 'friends': renderFriendsView(); break;
     }
+    TelegramApp.hapticFeedback('selection');
+  }
 
-    function getGreeting() {
-        const hour = new Date().getHours();
-        let period = 'Добрый день';
-        if (hour < 6) period = 'Доброй ночи';
-        else if (hour < 12) period = 'Доброе утро';
-        else if (hour >= 18) period = 'Добрый вечер';
-        return `${period}, ${TelegramApp.getUserName()}!`;
-    }
+  // ── Habits View ──
 
-    // ── Navigation ──
+  function renderHabitsView() {
+    const container = document.getElementById('habits-view');
+    if (!container) return;
 
-    function switchView(viewName) {
-        currentView = viewName;
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.view === viewName);
-        });
-        document.querySelectorAll('.view').forEach(v => {
-            v.classList.toggle('active', v.id === viewName + '-view');
-        });
+    const stats = HabitsManager.getStats();
+    const myHabits = HabitsManager.getMyHabits();
+    const subscribedHabits = HabitsManager.getSubscribedHabits();
 
-        switch (viewName) {
-            case 'habits': renderHabitsView(); break;
-            case 'calendar': CalendarComponent.render('calendar-view'); break;
-            case 'friends': renderFriendsView(); break;
-        }
-        TelegramApp.hapticFeedback('selection');
-    }
-
-    // ── Habits View ──
-
-    function renderHabitsView() {
-        const container = document.getElementById('habits-view');
-        if (!container) return;
-
-        const stats = HabitsManager.getStats();
-        const myHabits = HabitsManager.getMyHabits();
-        const subscribedHabits = HabitsManager.getSubscribedHabits();
-
-        let html = `
+    let html = `
       <div class="stats-bar">
         <div class="stat-card">
           <div class="stat-value">${stats.completed}/${stats.total}</div>
@@ -70,50 +70,50 @@ const HabitApp = (() => {
         </div>
       </div>`;
 
-        if (myHabits.length === 0 && subscribedHabits.length === 0) {
-            html += `
+    if (myHabits.length === 0 && subscribedHabits.length === 0) {
+      html += `
         <div class="empty-state">
           <div class="empty-state-icon">🎯</div>
           <div class="empty-state-title">Начните свой путь!</div>
           <div class="empty-state-text">Создайте свою первую привычку, нажав на кнопку «+» внизу</div>
         </div>`;
-        }
-
-        if (myHabits.length > 0) {
-            html += '<div class="friends-section-title">Мои привычки</div>';
-            myHabits.forEach(h => { html += renderHabitCard(h, false); });
-        }
-
-        if (subscribedHabits.length > 0) {
-            html += '<div class="friends-section-title">Совместные привычки</div>';
-            subscribedHabits.forEach(h => { html += renderHabitCard(h, true); });
-        }
-
-        container.innerHTML = html;
     }
 
-    function renderHabitCard(habit, isShared) {
-        const completed = HabitsManager.isCompletedToday(habit.id);
-        const streak = HabitsManager.getStreak(habit.id);
+    if (myHabits.length > 0) {
+      html += '<div class="friends-section-title">Мои привычки</div>';
+      myHabits.forEach(h => { html += renderHabitCard(h, false); });
+    }
 
-        let sharedBadge = '';
-        let friendsSection = '';
+    if (subscribedHabits.length > 0) {
+      html += '<div class="friends-section-title">Совместные привычки</div>';
+      subscribedHabits.forEach(h => { html += renderHabitCard(h, true); });
+    }
 
-        if (isShared) {
-            sharedBadge = `<span class="shared-badge">👥 ${habit.friendName || habit.ownerName}</span>`;
-            const friendComps = HabitsManager.getFriendCompletionsForDate(habit.id, new Date());
-            if (friendComps.length > 0) {
-                friendsSection = `
+    container.innerHTML = html;
+  }
+
+  function renderHabitCard(habit, isShared) {
+    const completed = HabitsManager.isCompletedToday(habit.id);
+    const streak = HabitsManager.getStreak(habit.id);
+
+    let sharedBadge = '';
+    let friendsSection = '';
+
+    if (isShared) {
+      sharedBadge = `<span class="shared-badge">👥 ${habit.friendName || habit.ownerName || habit.owner_name}</span>`;
+      const friendComps = HabitsManager.getFriendCompletionsForDate(habit.id, new Date());
+      if (friendComps.length > 0) {
+        friendsSection = `
           <div class="habit-friends">
             <div class="avatar-stack">
               ${friendComps.slice(0, 3).map(f => `<div class="avatar">${f.initials}</div>`).join('')}
             </div>
             <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — выполнили сегодня</span>
           </div>`;
-            }
-        }
+      }
+    }
 
-        return `
+    return `
       <div class="habit-card" id="card-${habit.id}">
         <div class="habit-card-header">
           <div class="habit-icon">${habit.icon}</div>
@@ -126,188 +126,212 @@ const HabitApp = (() => {
             </div>
           </div>
           <button class="habit-check-btn ${completed ? 'checked' : ''}" 
-            onclick="event.stopPropagation(); HabitApp.toggleHabit('${habit.id}')">
+            onclick="event.stopPropagation(); HabitApp.toggleHabit(${habit.id})">
             ${completed ? '✓' : ''}
           </button>
         </div>
         ${friendsSection}
       </div>`;
+  }
+
+  async function toggleHabit(habitId) {
+    const wasCompleted = await HabitsManager.toggleCompletion(habitId);
+    if (wasCompleted) {
+      TelegramApp.hapticFeedback('success');
+      showToast('✅ Привычка выполнена!');
+    } else {
+      TelegramApp.hapticFeedback('impact');
     }
+    renderHabitsView();
+  }
 
-    function toggleHabit(habitId) {
-        const wasCompleted = HabitsManager.toggleCompletion(habitId);
-        if (wasCompleted) {
-            TelegramApp.hapticFeedback('success');
-            showToast('✅ Привычка выполнена!');
-        } else {
-            TelegramApp.hapticFeedback('impact');
-        }
-        renderHabitsView();
-    }
+  // ── Friends View ──
 
-    // ── Friends View ──
+  async function renderFriendsView() {
+    const container = document.getElementById('friends-view');
+    if (!container) return;
 
-    function renderFriendsView() {
-        const container = document.getElementById('friends-view');
-        if (!container) return;
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--tg-theme-hint-color);">Загрузка...</div>';
 
-        const friends = HabitsManager.getFriends();
-        let html = '<div class="friends-section-title">Привычки друзей</div>';
+    const friends = await HabitsManager.fetchFriends();
+    let html = '<div class="friends-section-title">Привычки друзей</div>';
 
-        friends.forEach(friend => {
-            html += `
-        <div class="friend-card" onclick="HabitApp.showFriendHabits('${friend.id}')">
-          <div class="friend-avatar">${friend.initials}</div>
-          <div class="friend-info">
-            <div class="friend-name">${friend.name}</div>
-            <div class="friend-habits-count">${friend.habits.length} ${pluralHabits(friend.habits.length)}</div>
-          </div>
+    if (friends.length === 0) {
+      html += `
+        <div class="empty-state">
+          <div class="empty-state-icon">👥</div>
+          <div class="empty-state-title">Пока никого нет</div>
+          <div class="empty-state-text">Другие пользователи появятся здесь, когда создадут публичные привычки</div>
         </div>`;
-        });
-
-        container.innerHTML = html;
+    } else {
+      friends.forEach(friend => {
+        html += `
+          <div class="friend-card" onclick="HabitApp.showFriendHabits(${friend.id})">
+            <div class="friend-avatar">${friend.initials}</div>
+            <div class="friend-info">
+              <div class="friend-name">${friend.first_name} ${friend.last_name || ''}</div>
+              <div class="friend-habits-count">${friend.habitCount} ${pluralHabits(friend.habitCount)}</div>
+            </div>
+          </div>`;
+      });
     }
 
-    function showFriendHabits(friendId) {
-        const friends = HabitsManager.getFriends();
-        const friend = friends.find(f => f.id === friendId);
-        if (!friend) return;
+    container.innerHTML = html;
+  }
 
-        const container = document.getElementById('friends-view');
-        let html = `
+  async function showFriendHabits(friendId) {
+    const container = document.getElementById('friends-view');
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--tg-theme-hint-color);">Загрузка...</div>';
+
+    const data = await HabitsManager.fetchFriendHabits(friendId);
+    if (!data) {
+      showToast('⚠️ Не удалось загрузить');
+      renderFriendsView();
+      return;
+    }
+
+    const { friend, habits } = data;
+
+    let html = `
       <button class="tab-btn" onclick="HabitApp.switchView('friends')" style="margin-bottom: 16px;">◀ Назад</button>
-      <div class="friends-section-title">Привычки — ${friend.name}</div>`;
+      <div class="friends-section-title">Привычки — ${friend.first_name}</div>`;
 
-        friend.habits.forEach(habit => {
-            const isSubscribed = HabitsManager.isSubscribed(habit.id);
-            const streak = HabitsManager.getStreak(habit.id);
-
-            html += `
+    habits.forEach(habit => {
+      html += `
         <div class="habit-card">
           <div class="habit-card-header">
             <div class="habit-icon">${habit.icon}</div>
             <div class="habit-info">
               <div class="habit-name">${habit.name}</div>
               <div class="habit-meta">
-                ${streak > 0 ? `<span class="habit-streak">🔥 ${streak} д.</span>` : ''}
                 <span>${habit.frequency === 'daily' ? 'Ежедневно' : 'Еженедельно'}</span>
               </div>
             </div>
-            <button class="subscribe-btn ${isSubscribed ? 'subscribed' : ''}"
-              onclick="event.stopPropagation(); HabitApp.toggleSubscription('${friend.id}', '${habit.id}')">
-              ${isSubscribed ? 'Отписаться' : 'Вступить'}
+            <button class="subscribe-btn ${habit.is_subscribed ? 'subscribed' : ''}"
+              onclick="event.stopPropagation(); HabitApp.toggleSubscription(${friend.id}, ${habit.id})">
+              ${habit.is_subscribed ? 'Отписаться' : 'Вступить'}
             </button>
           </div>
-          ${habit.subscribers.length > 0 ? `
+          ${habit.subscriber_count > 0 ? `
             <div class="habit-friends">
-              <span class="friends-label">👥 ${habit.subscribers.length} ${pluralSubscribers(habit.subscribers.length)}</span>
+              <span class="friends-label">👥 ${habit.subscriber_count} ${pluralSubscribers(habit.subscriber_count)}</span>
             </div>` : ''}
         </div>`;
-        });
+    });
 
-        container.innerHTML = html;
-        TelegramApp.hapticFeedback('impact');
+    container.innerHTML = html;
+    TelegramApp.hapticFeedback('impact');
+  }
+
+  async function toggleSubscription(friendId, habitId) {
+    const allSubscribed = HabitsManager.getSubscribedHabits();
+    const isSub = allSubscribed.some(h => h.id === habitId);
+
+    if (isSub) {
+      await HabitsManager.unsubscribeFromHabit(habitId);
+      showToast('Вы отписались от привычки');
+    } else {
+      await HabitsManager.subscribeToHabit(friendId, habitId);
+      TelegramApp.hapticFeedback('success');
+      showToast('🎉 Вы подписались! Выполняйте вместе');
     }
 
-    function toggleSubscription(friendId, habitId) {
-        const isSubscribed = HabitsManager.isSubscribed(habitId);
-        if (isSubscribed) {
-            HabitsManager.unsubscribeFromHabit(habitId);
-            showToast('Вы отписались от привычки');
-        } else {
-            HabitsManager.subscribeToHabit(friendId, habitId);
-            TelegramApp.hapticFeedback('success');
-            showToast('🎉 Вы подписались! Выполняйте вместе');
-        }
-        showFriendHabits(friendId);
+    // Обновляем список привычек с сервера
+    try { await HabitsManager.syncFromServer(); } catch { }
+    showFriendHabits(friendId);
+  }
+
+  // ── Modal ──
+
+  function openModal() {
+    const modal = document.getElementById('create-modal');
+    modal.classList.add('visible');
+    TelegramApp.hapticFeedback('impact');
+
+    document.getElementById('habit-name-input').value = '';
+    document.getElementById('habit-desc-input').value = '';
+    document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+    document.querySelector('.icon-option')?.classList.add('selected');
+    document.querySelectorAll('.frequency-btn').forEach(el => el.classList.remove('selected'));
+    document.querySelector('.frequency-btn[data-freq="daily"]')?.classList.add('selected');
+    document.getElementById('public-toggle')?.classList.add('on');
+  }
+
+  function closeModal() {
+    document.getElementById('create-modal').classList.remove('visible');
+  }
+
+  function selectIcon(el) {
+    document.querySelectorAll('.icon-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    TelegramApp.hapticFeedback('selection');
+  }
+
+  function selectFrequency(el) {
+    document.querySelectorAll('.frequency-btn').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    TelegramApp.hapticFeedback('selection');
+  }
+
+  function togglePublic() {
+    document.getElementById('public-toggle').classList.toggle('on');
+    TelegramApp.hapticFeedback('selection');
+  }
+
+  async function createHabit() {
+    const name = document.getElementById('habit-name-input').value.trim();
+    if (!name) {
+      TelegramApp.hapticFeedback('error');
+      showToast('⚠️ Введите название привычки');
+      return;
     }
 
-    // ── Modal ──
+    const selectedIcon = document.querySelector('.icon-option.selected');
+    const icon = selectedIcon ? selectedIcon.textContent : '⭐';
+    const selectedFreq = document.querySelector('.frequency-btn.selected');
+    const frequency = selectedFreq ? selectedFreq.dataset.freq : 'daily';
+    const description = document.getElementById('habit-desc-input').value.trim();
+    const isPublic = document.getElementById('public-toggle').classList.contains('on');
 
-    function openModal() {
-        const modal = document.getElementById('create-modal');
-        modal.classList.add('visible');
-        TelegramApp.hapticFeedback('impact');
-
-        document.getElementById('habit-name-input').value = '';
-        document.getElementById('habit-desc-input').value = '';
-        document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
-        document.querySelector('.icon-option')?.classList.add('selected');
-        document.querySelectorAll('.frequency-btn').forEach(el => el.classList.remove('selected'));
-        document.querySelector('.frequency-btn[data-freq="daily"]')?.classList.add('selected');
-        document.getElementById('public-toggle')?.classList.add('on');
+    try {
+      await HabitsManager.createHabit({ name, description, icon, frequency, isPublic });
+      TelegramApp.hapticFeedback('success');
+      showToast('🎉 Привычка создана!');
+      closeModal();
+      renderHabitsView();
+    } catch (e) {
+      TelegramApp.hapticFeedback('error');
+      showToast('⚠️ Ошибка. Попробуйте ещё раз');
     }
+  }
 
-    function closeModal() {
-        document.getElementById('create-modal').classList.remove('visible');
-    }
+  // ── Helpers ──
 
-    function selectIcon(el) {
-        document.querySelectorAll('.icon-option').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        TelegramApp.hapticFeedback('selection');
-    }
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
 
-    function selectFrequency(el) {
-        document.querySelectorAll('.frequency-btn').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        TelegramApp.hapticFeedback('selection');
-    }
+  function pluralHabits(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'привычка';
+    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'привычки';
+    return 'привычек';
+  }
 
-    function togglePublic() {
-        document.getElementById('public-toggle').classList.toggle('on');
-        TelegramApp.hapticFeedback('selection');
-    }
+  function pluralSubscribers(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'участник';
+    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'участника';
+    return 'участников';
+  }
 
-    function createHabit() {
-        const name = document.getElementById('habit-name-input').value.trim();
-        if (!name) {
-            TelegramApp.hapticFeedback('error');
-            showToast('⚠️ Введите название привычки');
-            return;
-        }
-
-        const selectedIcon = document.querySelector('.icon-option.selected');
-        const icon = selectedIcon ? selectedIcon.textContent : '⭐';
-        const selectedFreq = document.querySelector('.frequency-btn.selected');
-        const frequency = selectedFreq ? selectedFreq.dataset.freq : 'daily';
-        const description = document.getElementById('habit-desc-input').value.trim();
-        const isPublic = document.getElementById('public-toggle').classList.contains('on');
-
-        HabitsManager.createHabit({ name, description, icon, frequency, isPublic });
-        TelegramApp.hapticFeedback('success');
-        showToast('🎉 Привычка создана!');
-        closeModal();
-        renderHabitsView();
-    }
-
-    // ── Helpers ──
-
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    function pluralHabits(n) {
-        if (n % 10 === 1 && n % 100 !== 11) return 'привычка';
-        if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'привычки';
-        return 'привычек';
-    }
-
-    function pluralSubscribers(n) {
-        if (n % 10 === 1 && n % 100 !== 11) return 'участник';
-        if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'участника';
-        return 'участников';
-    }
-
-    return {
-        init, switchView, toggleHabit,
-        showFriendHabits, toggleSubscription,
-        openModal, closeModal, selectIcon, selectFrequency,
-        togglePublic, createHabit
-    };
+  return {
+    init, switchView, toggleHabit,
+    showFriendHabits, toggleSubscription,
+    openModal, closeModal, selectIcon, selectFrequency,
+    togglePublic, createHabit
+  };
 })();
 
 document.addEventListener('DOMContentLoaded', HabitApp.init);
