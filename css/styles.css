@@ -1065,3 +1065,115 @@ textarea.form-input {
 .mb-md {
   margin-bottom: var(--space-md);
 }
+
+/* ── Share / Invite ── */
+.habit-share-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-full);
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--accent-light);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+  background: var(--accent-glow);
+}
+
+.subscriber-count {
+  font-size: var(--font-size-xs);
+  color: var(--tg-theme-hint-color);
+  margin-left: auto;
+}
+
+/* Invite Modal */
+.invite-modal {
+  text-align: center;
+  padding: var(--space-md) 0;
+}
+
+.invite-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-md);
+  animation: invitePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes invitePop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.invite-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.invite-desc {
+  font-size: var(--font-size-base);
+  color: var(--tg-theme-hint-color);
+  margin-bottom: var(--space-md);
+  line-height: 1.4;
+}
+
+.invite-meta {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--tg-theme-hint-color);
+}
+
+.invite-join-btn {
+  width: 100%;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-lg) !important;
+  padding: 14px !important;
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--tg-theme-hint-color);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:active {
+  background: var(--surface);
+}

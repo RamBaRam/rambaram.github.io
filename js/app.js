@@ -13,6 +13,15 @@ const HabitApp = (() => {
     const greeting = document.getElementById('user-greeting');
     if (greeting) greeting.textContent = getGreeting();
 
+    // Проверяем deep link — приглашение в привычку
+    const startParam = TelegramApp.getStartParam();
+    if (startParam && startParam.startsWith('habit_')) {
+      const habitId = parseInt(startParam.replace('habit_', ''));
+      if (habitId) {
+        showInviteModal(habitId);
+      }
+    }
+
     switchView('habits');
   }
 
@@ -98,6 +107,7 @@ const HabitApp = (() => {
 
     let sharedBadge = '';
     let friendsSection = '';
+    let shareBtn = '';
 
     if (isShared) {
       sharedBadge = `<span class="shared-badge">👥 ${habit.friendName || habit.ownerName || habit.owner_name}</span>`;
@@ -111,6 +121,15 @@ const HabitApp = (() => {
             <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — выполнили сегодня</span>
           </div>`;
       }
+    } else if (habit.is_public) {
+      // Кнопка «Пригласить» для своих публичных привычек
+      shareBtn = `
+        <div class="habit-share-row">
+          <button class="share-btn" onclick="event.stopPropagation(); HabitApp.shareHabit(${habit.id}, '${habit.name.replace(/'/g, '\\&#39;')}', '${habit.icon}')">
+            📤 Пригласить друга
+          </button>
+          ${habit.subscriber_count > 0 ? `<span class="subscriber-count">👥 ${habit.subscriber_count}</span>` : ''}
+        </div>`;
     }
 
     return `
@@ -131,6 +150,7 @@ const HabitApp = (() => {
           </button>
         </div>
         ${friendsSection}
+        ${shareBtn}
       </div>`;
   }
 
@@ -326,11 +346,76 @@ const HabitApp = (() => {
     return 'участников';
   }
 
+  // ── Invite / Share ──
+
+  function shareHabit(habitId, habitName, habitIcon) {
+    TelegramApp.shareHabit(habitId, habitName, habitIcon);
+    TelegramApp.hapticFeedback('success');
+  }
+
+  async function showInviteModal(habitId) {
+    try {
+      const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : 'https://rambaramgithubio-production.up.railway.app/api';
+
+      const resp = await fetch(`${API_URL}/invite/${habitId}`);
+      if (!resp.ok) throw new Error('Not found');
+      const habit = await resp.json();
+
+      const modal = document.getElementById('create-modal');
+      const sheet = modal.querySelector('.modal-sheet');
+
+      sheet.innerHTML = `
+        <div class="modal-handle"></div>
+        <div class="invite-modal">
+          <div class="invite-icon">${habit.icon}</div>
+          <h2 class="invite-title">${habit.name}</h2>
+          ${habit.description ? `<p class="invite-desc">${habit.description}</p>` : ''}
+          <div class="invite-meta">
+            <span>👤 ${habit.owner_name}</span>
+            <span>👥 ${habit.subscriber_count} ${pluralSubscribers(habit.subscriber_count)}</span>
+            <span>${habit.frequency === 'daily' ? 'Ежедневно' : 'Еженедельно'}</span>
+          </div>
+          <button class="btn-primary invite-join-btn" onclick="HabitApp.acceptInvite(${habit.id})">Присоединиться</button>
+          <button class="btn-secondary" onclick="HabitApp.closeInviteModal()">Не сейчас</button>
+        </div>
+      `;
+
+      modal.classList.add('visible');
+    } catch (e) {
+      console.error('Invite load failed:', e);
+      showToast('⚠️ Привычка не найдена');
+    }
+  }
+
+  async function acceptInvite(habitId) {
+    try {
+      await HabitsManager.subscribeToHabit(null, habitId);
+      TelegramApp.hapticFeedback('success');
+      showToast('🎉 Вы присоединились!');
+      closeInviteModal();
+      await HabitsManager.syncFromServer();
+      renderHabitsView();
+    } catch (e) {
+      TelegramApp.hapticFeedback('error');
+      showToast('⚠️ Не удалось подписаться');
+    }
+  }
+
+  function closeInviteModal() {
+    const modal = document.getElementById('create-modal');
+    modal.classList.remove('visible');
+    // Перезагружаем для восстановления модала создания
+    setTimeout(() => location.reload(), 300);
+  }
+
   return {
     init, switchView, toggleHabit,
     showFriendHabits, toggleSubscription,
     openModal, closeModal, selectIcon, selectFrequency,
-    togglePublic, createHabit
+    togglePublic, createHabit,
+    shareHabit, acceptInvite, closeInviteModal, showToast
   };
 })();
 

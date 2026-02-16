@@ -29,10 +29,13 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Все API-роуты требуют аутентификации
+// Публичные роуты (без авторизации)
+app.use('/api/invite', require('./routes/invite'));
+
+// Все остальные API-роуты требуют аутентификации
 app.use('/api', authMiddleware);
 
-// Роуты
+// Роуты (защищённые)
 app.use('/api/habits', require('./routes/habits'));
 app.use('/api/completions', require('./routes/completions'));
 app.use('/api/friends', require('./routes/friends'));

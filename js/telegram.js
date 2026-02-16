@@ -91,9 +91,36 @@ const TelegramApp = (() => {
     tg.MainButton.hide();
   }
 
+  /**
+   * Получить startapp параметр из deep link
+   */
+  function getStartParam() {
+    return tg?.initDataUnsafe?.start_param || null;
+  }
+
+  /**
+   * Поделиться привычкой через Telegram
+   */
+  function shareHabit(habitId, habitName, habitIcon) {
+    const botUsername = 'rambaram_habit_bot'; // ← имя бота
+    const appName = 'app'; // ← короткое имя Mini App в BotFather
+    const url = `https://t.me/${botUsername}/${appName}?startapp=habit_${habitId}`;
+    const text = `${habitIcon} Присоединяйся к привычке «${habitName}»!`;
+
+    if (tg) {
+      // В Telegram — открываем диалог выбора чата для пересылки
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
+    } else {
+      // В браузере — копируем ссылку
+      navigator.clipboard?.writeText(url);
+      HabitApp.showToast('🔗 Ссылка скопирована!');
+    }
+  }
+
   return {
     init, getUser, getUserId, getUserName, getUserInitials,
     getInitData, hapticFeedback, showMainButton, hideMainButton,
+    getStartParam, shareHabit,
     get tg() { return tg; }
   };
 })();
