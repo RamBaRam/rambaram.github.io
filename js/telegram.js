@@ -12,6 +12,10 @@ const TelegramApp = (() => {
     if (tg) {
       tg.ready();
       tg.expand();
+      // Полноэкранный режим — скрывает шапку браузера
+      if (tg.requestFullscreen) {
+        tg.requestFullscreen();
+      }
       applyTheme();
       user = tg.initDataUnsafe?.user || null;
 
