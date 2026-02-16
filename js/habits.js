@@ -6,7 +6,7 @@ const HabitsManager = (() => {
     // ⚠️ Замените на URL вашего backend после деплоя
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000/api'
-        : 'https://YOUR-BACKEND-URL.railway.app/api'; // TODO: заменить после деплоя
+        : 'https://rambaramgithubio-production.up.railway.app/api';
 
     const CACHE_KEY = 'habit_tracker_cache';
     const HABIT_ICONS = ['🏃', '📚', '💧', '🧘', '✍️', '🎸', '💪', '🥗', '😴', '🧹', '💻', '🎨'];
