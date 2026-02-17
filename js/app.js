@@ -110,16 +110,18 @@ const HabitApp = (() => {
 
     if (isShared) {
       sharedBadge = `<span class="shared-badge">👥 ${habit.friendName || habit.ownerName || habit.owner_name}</span>`;
-      const friendComps = HabitsManager.getFriendCompletionsForDate(habit.id, new Date());
-      if (friendComps.length > 0) {
-        friendsSection = `
-          <div class="habit-friends">
-            <div class="avatar-stack">
-              ${friendComps.slice(0, 3).map(f => `<div class="avatar">${f.initials}</div>`).join('')}
-            </div>
-            <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — ${completionVerb(friendComps)} сегодня</span>
-          </div>`;
-      }
+    }
+
+    // Показываем кто выполнил — и для своих, и для совместных привычек
+    const friendComps = HabitsManager.getFriendCompletionsForDate(habit.id, new Date());
+    if (friendComps.length > 0) {
+      friendsSection = `
+        <div class="habit-friends">
+          <div class="avatar-stack">
+            ${friendComps.slice(0, 3).map(f => `<div class="avatar">${f.initials}</div>`).join('')}
+          </div>
+          <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — ${completionVerb(friendComps)} сегодня</span>
+        </div>`;
     }
 
     // Раскрываемая панель: описание + действия
