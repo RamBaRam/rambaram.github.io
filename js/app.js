@@ -584,11 +584,9 @@ const HabitApp = (() => {
       <div class="notification-settings">
         <div class="notif-header">
           <span class="notif-title">🔔 Напоминания</span>
-          <label class="toggle-switch">
-            <input type="checkbox" ${notifSettings.enabled ? 'checked' : ''} 
-              onchange="HabitApp.toggleNotifications()">
-            <span class="toggle-slider"></span>
-          </label>
+          <div class="toggle-switch ${notifSettings.enabled ? 'active' : ''}" onclick="event.stopPropagation(); HabitApp.toggleNotifications()">
+            <div class="toggle-knob"></div>
+          </div>
         </div>
         ${notifSettings.enabled ? `
           <div class="notif-time">

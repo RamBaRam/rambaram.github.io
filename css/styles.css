@@ -1278,30 +1278,23 @@ textarea.form-input {
   border-color: var(--accent);
 }
 
-/* Toggle Switch */
+/* Toggle Switch — pure div, no checkbox */
 .toggle-switch {
   position: relative;
-  display: inline-block;
   width: 52px;
   height: 28px;
   flex-shrink: 0;
-}
-
-.toggle-switch input {
-  display: none;
-}
-
-.toggle-slider {
-  position: absolute;
-  inset: 0;
   background: #555;
   border-radius: 28px;
-  transition: background 0.3s;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
-.toggle-slider::before {
-  content: '';
+.toggle-switch.active {
+  background: var(--accent);
+}
+
+.toggle-knob {
   position: absolute;
   width: 22px;
   height: 22px;
@@ -1313,10 +1306,6 @@ textarea.form-input {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-switch input:checked+.toggle-slider {
-  background: var(--accent);
-}
-
-.toggle-switch input:checked+.toggle-slider::before {
+.toggle-switch.active .toggle-knob {
   transform: translateX(24px);
 }
