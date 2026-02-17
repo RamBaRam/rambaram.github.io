@@ -348,6 +348,6 @@ const HabitsManager = (() => {
         getFriends, fetchFriends, fetchFriendHabits,
         subscribeToHabit, unsubscribeFromHabit, isSubscribed,
         getFriendCompletionsForDate, getStats, dateKey, todayKey,
-        syncFromServer
+        syncFromServer, apiFetch
     };
 })();

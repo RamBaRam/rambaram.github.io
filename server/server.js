@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const { authMiddleware } = require('./middleware/auth');
 const { initDB } = require('./db/init');
+const { startNotifier } = require('./services/notifier');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,11 +41,13 @@ app.use('/api', authMiddleware);
 app.use('/api/habits', require('./routes/habits'));
 app.use('/api/completions', require('./routes/completions'));
 app.use('/api/friends', require('./routes/friends'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Запуск
 (async () => {
     try {
         await initDB();
+        startNotifier();
         app.listen(PORT, () => {
             console.log(`🚀 Habit Tracker API running on port ${PORT}`);
             console.log(`   App: http://localhost:${PORT}`);

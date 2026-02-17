@@ -46,10 +46,19 @@ async function initDB() {
       PRIMARY KEY(user_id, habit_id)
     );
 
+    CREATE TABLE IF NOT EXISTS notification_settings (
+      telegram_id     BIGINT PRIMARY KEY REFERENCES users(telegram_id),
+      enabled         BOOLEAN DEFAULT true,
+      remind_time     INTEGER DEFAULT 20,
+      timezone_offset INTEGER DEFAULT 180,
+      updated_at      TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE INDEX IF NOT EXISTS idx_habits_owner ON habits(owner_id);
     CREATE INDEX IF NOT EXISTS idx_completions_habit ON completions(habit_id, date);
     CREATE INDEX IF NOT EXISTS idx_completions_user ON completions(user_id, date);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_notifications_time ON notification_settings(remind_time) WHERE enabled = true;
   `);
 
   console.log('✅ Database tables initialized');

@@ -23,6 +23,9 @@ const HabitApp = (() => {
     }
 
     switchView('habits');
+
+    // Загружаем настройки уведомлений в фоне
+    loadNotificationSettings();
   }
 
   function getGreeting() {
@@ -98,7 +101,7 @@ const HabitApp = (() => {
       subscribedHabits.forEach(h => { html += renderHabitCard(h, true); });
     }
 
-    container.innerHTML = html;
+    container.innerHTML = html + renderNotificationSettings();
   }
 
   function renderHabitCard(habit, isShared) {
@@ -529,13 +532,83 @@ const HabitApp = (() => {
     }
   }
 
+  // ── Notification Settings ──
+
+  let notifSettings = { enabled: true, remind_time: 20, timezone_offset: 180 };
+
+  async function loadNotificationSettings() {
+    try {
+      const data = await HabitsManager.apiFetch('/notifications');
+      if (data) notifSettings = data;
+    } catch (e) {
+      console.error('Failed to load notification settings:', e);
+    }
+  }
+
+  async function saveNotificationSettings() {
+    try {
+      const data = await HabitsManager.apiFetch('/notifications', {
+        method: 'POST',
+        body: JSON.stringify(notifSettings)
+      });
+      if (data) notifSettings = data;
+    } catch (e) {
+      console.error('Failed to save notification settings:', e);
+    }
+  }
+
+  async function toggleNotifications() {
+    notifSettings.enabled = !notifSettings.enabled;
+    notifSettings.timezone_offset = -new Date().getTimezoneOffset();
+    await saveNotificationSettings();
+    TelegramApp.hapticFeedback('impact');
+    renderHabitsView();
+    showToast(notifSettings.enabled ? '🔔 Уведомления включены' : '🔕 Уведомления выключены');
+  }
+
+  async function updateRemindTime(value) {
+    notifSettings.remind_time = parseInt(value);
+    notifSettings.timezone_offset = -new Date().getTimezoneOffset();
+    await saveNotificationSettings();
+    TelegramApp.hapticFeedback('selection');
+    showToast(`⏰ Напоминание в ${value}:00`);
+  }
+
+  function renderNotificationSettings() {
+    const timeOptions = Array.from({ length: 24 }, (_, i) => {
+      const selected = i === notifSettings.remind_time ? 'selected' : '';
+      return `<option value="${i}" ${selected}>${String(i).padStart(2, '0')}:00</option>`;
+    }).join('');
+
+    return `
+      <div class="notification-settings">
+        <div class="notif-header">
+          <span class="notif-title">🔔 Напоминания</span>
+          <label class="toggle-switch">
+            <input type="checkbox" ${notifSettings.enabled ? 'checked' : ''} 
+              onchange="HabitApp.toggleNotifications()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        ${notifSettings.enabled ? `
+          <div class="notif-time">
+            <span>Время напоминания</span>
+            <select class="time-select" onchange="HabitApp.updateRemindTime(this.value)">
+              ${timeOptions}
+            </select>
+          </div>
+        ` : ''}
+      </div>`;
+  }
+
   return {
     init, switchView, toggleHabit,
     showFriendHabits, toggleSubscription,
     openModal, closeModal, selectIcon, selectFrequency,
     togglePublic, createHabit,
     shareHabit, acceptInvite, closeInviteModal, showToast,
-    toggleExpand, confirmDeleteHabit, confirmUnsubscribe
+    toggleExpand, confirmDeleteHabit, confirmUnsubscribe,
+    toggleNotifications, updateRemindTime
   };
 })();
 

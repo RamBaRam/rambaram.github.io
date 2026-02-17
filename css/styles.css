@@ -1228,3 +1228,97 @@ textarea.form-input {
 .btn-secondary:active {
   background: var(--surface);
 }
+
+/* ── Notification Settings ── */
+.notification-settings {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notif-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+}
+
+.notif-time {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+  color: var(--tg-theme-hint-color);
+  font-size: var(--font-size-sm);
+}
+
+.time-select {
+  background: var(--surface-hover);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.time-select:focus {
+  border-color: var(--accent);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--surface-hover);
+  border-radius: 26px;
+  transition: var(--transition-fast);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: var(--tg-theme-text-color);
+  border-radius: 50%;
+  transition: var(--transition-fast);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+  background: var(--accent);
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+  transform: translateX(22px);
+}
