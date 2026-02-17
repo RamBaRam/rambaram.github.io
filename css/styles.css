@@ -116,7 +116,7 @@ body::before {
 
 /* ── Header ── */
 .app-header {
-  padding: calc(env(safe-area-inset-top, 0px) + var(--space-xl)) var(--space-md) var(--space-md);
+  padding: 60px var(--space-md) var(--space-md);
   position: sticky;
   top: 0;
   z-index: 100;
