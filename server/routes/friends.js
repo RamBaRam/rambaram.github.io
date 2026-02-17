@@ -1,56 +1,63 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/init');
+const { pool } = require('../db/init');
 
 // GET /api/friends — Список пользователей с публичными привычками
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     const userId = req.user.id;
 
     // Все пользователи с публичными привычками (кроме текущего)
-    const friends = db.prepare(`
+    const { rows: friends } = await pool.query(`
     SELECT DISTINCT u.telegram_id as id, u.first_name, u.last_name, u.username
     FROM users u
     JOIN habits h ON h.owner_id = u.telegram_id AND h.is_public = 1
-    WHERE u.telegram_id != ?
+    WHERE u.telegram_id != $1
     ORDER BY u.first_name
-  `).all(userId);
+  `, [userId]);
 
     // Добавляем количество привычек и инициалы
-    const result = friends.map(f => {
-        const habitCount = db.prepare(
-            'SELECT COUNT(*) as count FROM habits WHERE owner_id = ? AND is_public = 1'
-        ).get(f.id).count;
-
+    const result = [];
+    for (const f of friends) {
+        const { rows: countRows } = await pool.query(
+            'SELECT COUNT(*) as count FROM habits WHERE owner_id = $1 AND is_public = 1',
+            [f.id]
+        );
+        const habitCount = parseInt(countRows[0].count);
         const initials = ((f.first_name || '')[0] || '') + ((f.last_name || '')[0] || '');
 
-        return {
+        result.push({
             ...f,
             initials: initials.toUpperCase() || '?',
             habitCount
-        };
-    });
+        });
+    }
 
     res.json(result);
 });
 
 // GET /api/friends/:id/habits — Привычки друга
-router.get('/:id/habits', (req, res) => {
+router.get('/:id/habits', async (req, res) => {
     const friendId = parseInt(req.params.id);
     const userId = req.user.id;
 
-    const friend = db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(friendId);
-    if (!friend) {
+    const { rows: friendRows } = await pool.query(
+        'SELECT * FROM users WHERE telegram_id = $1', [friendId]
+    );
+
+    if (friendRows.length === 0) {
         return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    const habits = db.prepare(`
+    const friend = friendRows[0];
+
+    const { rows: habits } = await pool.query(`
     SELECT h.*,
       (SELECT COUNT(*) FROM subscriptions WHERE habit_id = h.id) as subscriber_count,
-      (SELECT 1 FROM subscriptions WHERE habit_id = h.id AND user_id = ?) as is_subscribed
+      (SELECT 1 FROM subscriptions WHERE habit_id = h.id AND user_id = $1) as is_subscribed
     FROM habits h
-    WHERE h.owner_id = ? AND h.is_public = 1
+    WHERE h.owner_id = $2 AND h.is_public = 1
     ORDER BY h.created_at DESC
-  `).all(userId, friendId);
+  `, [userId, friendId]);
 
     res.json({
         friend: {
@@ -68,51 +75,55 @@ router.get('/:id/habits', (req, res) => {
 });
 
 // POST /api/friends/subscribe/:habitId — Подписаться
-router.post('/subscribe/:habitId', (req, res) => {
+router.post('/subscribe/:habitId', async (req, res) => {
     const habitId = parseInt(req.params.habitId);
     const userId = req.user.id;
 
-    const habit = db.prepare(
-        'SELECT * FROM habits WHERE id = ? AND is_public = 1'
-    ).get(habitId);
+    const { rows } = await pool.query(
+        'SELECT * FROM habits WHERE id = $1 AND is_public = 1', [habitId]
+    );
 
-    if (!habit) {
+    if (rows.length === 0) {
         return res.status(404).json({ error: 'Привычка не найдена' });
     }
 
-    if (habit.owner_id === userId) {
+    if (rows[0].owner_id === userId) {
         return res.status(400).json({ error: 'Нельзя подписаться на свою привычку' });
     }
 
     try {
-        db.prepare(
-            'INSERT INTO subscriptions (user_id, habit_id) VALUES (?, ?)'
-        ).run(userId, habitId);
+        await pool.query(
+            'INSERT INTO subscriptions (user_id, habit_id) VALUES ($1, $2)',
+            [userId, habitId]
+        );
     } catch (e) {
         // Уже подписан — не ошибка
     }
 
-    const count = db.prepare(
-        'SELECT COUNT(*) as count FROM subscriptions WHERE habit_id = ?'
-    ).get(habitId).count;
+    const { rows: countRows } = await pool.query(
+        'SELECT COUNT(*) as count FROM subscriptions WHERE habit_id = $1',
+        [habitId]
+    );
 
-    res.json({ subscribed: true, subscriber_count: count });
+    res.json({ subscribed: true, subscriber_count: parseInt(countRows[0].count) });
 });
 
 // DELETE /api/friends/subscribe/:habitId — Отписаться
-router.delete('/subscribe/:habitId', (req, res) => {
+router.delete('/subscribe/:habitId', async (req, res) => {
     const habitId = parseInt(req.params.habitId);
     const userId = req.user.id;
 
-    db.prepare(
-        'DELETE FROM subscriptions WHERE user_id = ? AND habit_id = ?'
-    ).run(userId, habitId);
+    await pool.query(
+        'DELETE FROM subscriptions WHERE user_id = $1 AND habit_id = $2',
+        [userId, habitId]
+    );
 
-    const count = db.prepare(
-        'SELECT COUNT(*) as count FROM subscriptions WHERE habit_id = ?'
-    ).get(habitId).count;
+    const { rows: countRows } = await pool.query(
+        'SELECT COUNT(*) as count FROM subscriptions WHERE habit_id = $1',
+        [habitId]
+    );
 
-    res.json({ subscribed: false, subscriber_count: count });
+    res.json({ subscribed: false, subscriber_count: parseInt(countRows[0].count) });
 });
 
 module.exports = router;

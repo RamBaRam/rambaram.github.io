@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const db = require('../db/init');
+const { pool } = require('../db/init');
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 
@@ -49,7 +49,7 @@ function validateInitData(initData) {
 /**
  * Express middleware для аутентификации
  */
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
     const initData = req.headers['x-telegram-init-data'];
 
     // Режим разработки — без токена
@@ -63,7 +63,7 @@ function authMiddleware(req, res, next) {
             last_name: 'User',
             username: 'dev_user'
         };
-        ensureUser(req.user);
+        await ensureUser(req.user);
         return next();
     }
 
@@ -72,7 +72,7 @@ function authMiddleware(req, res, next) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    ensureUser(user);
+    await ensureUser(user);
     req.user = user;
     next();
 }
@@ -80,15 +80,15 @@ function authMiddleware(req, res, next) {
 /**
  * Создаёт или обновляет пользователя в БД
  */
-function ensureUser(user) {
-    db.prepare(`
+async function ensureUser(user) {
+    await pool.query(`
     INSERT INTO users (telegram_id, first_name, last_name, username)
-    VALUES (?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT(telegram_id) DO UPDATE SET
-      first_name = excluded.first_name,
-      last_name = excluded.last_name,
-      username = excluded.username
-  `).run(user.id, user.first_name || '', user.last_name || '', user.username || '');
+      first_name = EXCLUDED.first_name,
+      last_name = EXCLUDED.last_name,
+      username = EXCLUDED.username
+  `, [user.id, user.first_name || '', user.last_name || '', user.username || '']);
 }
 
 module.exports = { authMiddleware, validateInitData };

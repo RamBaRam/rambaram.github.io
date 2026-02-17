@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { authMiddleware } = require('./middleware/auth');
+const { initDB } = require('./db/init');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,11 +42,19 @@ app.use('/api/completions', require('./routes/completions'));
 app.use('/api/friends', require('./routes/friends'));
 
 // Запуск
-app.listen(PORT, () => {
-    console.log(`🚀 Habit Tracker API running on port ${PORT}`);
-    console.log(`   App: http://localhost:${PORT}`);
-    console.log(`   Health: http://localhost:${PORT}/api/health`);
-    if (!process.env.BOT_TOKEN) {
-        console.log('   ⚠️  BOT_TOKEN not set — running in dev mode');
+(async () => {
+    try {
+        await initDB();
+        app.listen(PORT, () => {
+            console.log(`🚀 Habit Tracker API running on port ${PORT}`);
+            console.log(`   App: http://localhost:${PORT}`);
+            console.log(`   Health: http://localhost:${PORT}/api/health`);
+            if (!process.env.BOT_TOKEN) {
+                console.log('   ⚠️  BOT_TOKEN not set — running in dev mode');
+            }
+        });
+    } catch (e) {
+        console.error('❌ Failed to start:', e.message);
+        process.exit(1);
     }
-});
+})();
