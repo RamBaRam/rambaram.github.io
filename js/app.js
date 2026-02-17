@@ -120,7 +120,7 @@ const HabitApp = (() => {
           <div class="avatar-stack">
             ${friendComps.slice(0, 3).map(f => `<div class="avatar">${f.initials}</div>`).join('')}
           </div>
-          <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — ${completionVerb(friendComps)} сегодня</span>
+          <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — ✅ выполнено сегодня</span>
         </div>`;
     }
 
