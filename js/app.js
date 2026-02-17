@@ -117,7 +117,7 @@ const HabitApp = (() => {
             <div class="avatar-stack">
               ${friendComps.slice(0, 3).map(f => `<div class="avatar">${f.initials}</div>`).join('')}
             </div>
-            <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — выполнили сегодня</span>
+            <span class="friends-label">${friendComps.map(f => f.name).join(', ')} — ${completionVerb(friendComps)} сегодня</span>
           </div>`;
       }
     }
@@ -367,6 +367,19 @@ const HabitApp = (() => {
     if (n % 10 === 1 && n % 100 !== 11) return 'участник';
     if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'участника';
     return 'участников';
+  }
+
+  /**
+   * Склоняет «выполнил/выполнила/выполнили» по количеству и полу
+   * Определение пола по окончанию имени (а/я → жен.)
+   */
+  function completionVerb(friends) {
+    if (friends.length > 1) return 'выполнили';
+    const name = (friends[0]?.name || '').trim();
+    const lastChar = name.slice(-1).toLowerCase();
+    // Имена на -а/-я — женские (Алёна, Мария, Александра)
+    if (lastChar === 'а' || lastChar === 'я') return 'выполнила';
+    return 'выполнил';
   }
 
   // ── Invite / Share ──

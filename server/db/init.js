@@ -1,7 +1,9 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'database.sqlite');
+// Если задана переменная DATABASE_PATH — используем её (Railway volume),
+// иначе — локальный файл рядом с кодом
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite');
 const db = new Database(dbPath);
 
 // Включаем WAL для лучшей производительности
