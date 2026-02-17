@@ -1282,38 +1282,39 @@ textarea.form-input {
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 26px;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .toggle-switch input {
+  position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
+  pointer-events: none;
 }
 
 .toggle-slider {
   position: absolute;
+  inset: 0;
+  background: #555;
+  border-radius: 28px;
+  transition: background 0.3s;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--border);
-  border-radius: 26px;
-  transition: var(--transition-fast);
 }
 
 .toggle-slider::before {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  top: 3px;
   left: 3px;
-  bottom: 3px;
-  background: white;
+  background: #fff;
   border-radius: 50%;
-  transition: var(--transition-fast);
+  transition: transform 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .toggle-switch input:checked+.toggle-slider {
@@ -1321,5 +1322,5 @@ textarea.form-input {
 }
 
 .toggle-switch input:checked+.toggle-slider::before {
-  transform: translateX(22px);
+  transform: translateX(24px);
 }
